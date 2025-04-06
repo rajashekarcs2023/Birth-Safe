@@ -1,10 +1,10 @@
 import { supabase } from "./supabase"
-import { getSession } from "@auth0/nextjs-auth0"
+import { auth0 } from "./auth0"
 
 // Save onboarding data to Supabase
 export const saveOnboardingData = async (req, onboardingData) => {
   try {
-    const session = await getSession(req)
+    const session = await auth0.getSession(req)
 
     if (!session) {
       throw new Error("Not authenticated")
@@ -53,7 +53,7 @@ export const saveOnboardingData = async (req, onboardingData) => {
 // Get onboarding status
 export const getOnboardingStatus = async (req) => {
   try {
-    const session = await getSession(req)
+    const session = await auth0.getSession(req)
 
     if (!session) {
       throw new Error("Not authenticated")

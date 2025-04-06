@@ -15,7 +15,7 @@ function AuthSync() {
 
       if (user) {
         // Get the token from the client-side session
-        const response = await fetch("/api/auth/token")
+        const response = await fetch("/auth/token")
         const { token } = await response.json()
 
         if (token) {

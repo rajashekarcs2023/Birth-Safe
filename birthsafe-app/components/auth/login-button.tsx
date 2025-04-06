@@ -2,34 +2,28 @@
 
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/components/supabase-auth-provider"
 
-export function LoginButton() {
+export function LoginButton({ redirectTo = "/dashboard" }) {
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+  const { signIn } = useAuth()
 
   const handleLogin = async () => {
     setIsLoading(true)
-    // In a real implementation, this would redirect to Auth0
-    // window.location.href = '/api/auth/login'
-
-    // For demo purposes, we'll just simulate a delay
-    setTimeout(() => {
+    try {
+      // Redirect to login page
+      router.push(`/login?returnTo=${encodeURIComponent(redirectTo)}`)
+    } catch (error) {
+      console.error("Login error:", error)
       setIsLoading(false)
-      // Mock successful login
-      localStorage.setItem(
-        "mockUser",
-        JSON.stringify({
-          name: "Jane Doe",
-          email: "jane@example.com",
-          picture: "/placeholder.svg?height=50&width=50",
-        }),
-      )
-      window.location.href = "/dashboard"
-    }, 1500)
+    }
   }
 
   return (
     <Button onClick={handleLogin} disabled={isLoading} className="w-full">
-      {isLoading ? "Logging in..." : "Log In with Auth0"}
+      {isLoading ? "Logging in..." : "Log In"}
     </Button>
   )
 }

@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 import { usePathname } from "next/navigation"
 import { LanguageProvider } from "@/contexts/language-context"
+import { SupabaseAuthProvider } from "@/components/supabase-auth-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -20,13 +21,15 @@ export default function ClientLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <LanguageProvider>
-          <SidebarProvider>
-            {pathname !== "/" && <AppSidebar />}
-            <SidebarInset className="bg-slate-50">{children}</SidebarInset>
-            <Toaster />
-          </SidebarProvider>
-        </LanguageProvider>
+        <SupabaseAuthProvider>
+          <LanguageProvider>
+            <SidebarProvider>
+              {pathname !== "/" && <AppSidebar />}
+              <SidebarInset className="bg-slate-50">{children}</SidebarInset>
+              <Toaster />
+            </SidebarProvider>
+          </LanguageProvider>
+        </SupabaseAuthProvider>
       </body>
     </html>
   )

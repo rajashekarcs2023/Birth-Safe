@@ -5,11 +5,11 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Create profiles table with Supabase Auth integration
 CREATE TABLE profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES auth.users(id) UNIQUE NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT,
+  name TEXT,
   picture TEXT,
-  user_type TEXT NOT NULL, -- expectant, provider, advocate
+  user_type TEXT, -- expectant, provider, advocate
   pregnancy_stage TEXT, -- trying, early, confirmed, postpartum
   pregnancy_profile TEXT, -- first-time, subsequent
   previous_loss BOOLEAN DEFAULT false,
@@ -26,7 +26,8 @@ CREATE TABLE profiles (
   healthcare_provider TEXT,
   onboarding_completed BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT profiles_user_id_key UNIQUE (user_id)
 );
 
 -- Enable Row Level Security
@@ -40,6 +41,10 @@ CREATE POLICY "Users can view their own profile"
 CREATE POLICY "Users can update their own profile" 
   ON profiles FOR UPDATE 
   USING (user_id = auth.uid());
+
+CREATE POLICY "Users can insert their own profile" 
+  ON profiles FOR INSERT 
+  WITH CHECK (user_id = auth.uid());
 
 -- Create medical_records table
 CREATE TABLE medical_records (
@@ -350,12 +355,15 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (user_id, email, name)
-  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'name');
+  VALUES (NEW.id, NEW.email, COALESCE(NEW.raw_user_meta_data->>'name', NEW.email));
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger to create profile when a new user signs up
+-- Drop the trigger if it exists
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+-- Create trigger to create profile when a new user signs up
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
@@ -419,4 +427,3 @@ CREATE TRIGGER set_timestamp
 BEFORE UPDATE ON grief_resources
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
-

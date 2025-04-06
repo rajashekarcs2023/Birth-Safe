@@ -1,10 +1,10 @@
 import { supabase } from "./supabase"
-import { getSession } from "@auth0/nextjs-auth0"
+import { auth0 } from "./auth0"
 
 // Get user profile
 export const getUserProfile = async (req) => {
   try {
-    const session = await getSession(req)
+    const session = await auth0.getSession(req)
 
     if (!session) {
       throw new Error("Not authenticated")
@@ -27,7 +27,7 @@ export const getUserProfile = async (req) => {
 // Update user profile
 export const updateUserProfile = async (req, profileData) => {
   try {
-    const session = await getSession(req)
+    const session = await auth0.getSession(req)
 
     if (!session) {
       throw new Error("Not authenticated")
