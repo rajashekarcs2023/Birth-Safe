@@ -51,11 +51,25 @@ export async function middleware(req) {
   const referer = req.headers.get('referer') || ''
   const isFromLogin = referer.includes('/login')
   
-  if (!session && (
-    req.nextUrl.pathname.startsWith("/dashboard") ||
-    req.nextUrl.pathname.startsWith("/onboarding")
-  ) && !isFromLogin) {
-    console.log('Middleware: No session, redirecting to login')
+  // Public routes that don't require authentication
+  const publicRoutes = [
+    '/',                // Landing page
+    '/login',           // Login page
+    '/signup',          // Signup page
+    '/auth/callback',   // Auth callback
+    '/auth-test',       // Auth test page
+    '/_next',           // Next.js assets
+    '/api/auth'         // Auth API routes
+  ]
+  
+  // Check if the current path is a public route
+  const isPublicRoute = publicRoutes.some(route => 
+    req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route)
+  )
+  
+  // If no session, not a public route, and not coming from login, redirect to login
+  if (!session && !isPublicRoute && !isFromLogin) {
+    console.log(`Middleware: No session for protected route ${req.nextUrl.pathname}, redirecting to login`)
     const redirectUrl = new URL("/login", req.url)
     redirectUrl.searchParams.set("returnTo", req.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
